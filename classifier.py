@@ -2,6 +2,8 @@ import pandas as pd
 from sklearn.feature_extraction import DictVectorizer
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import csv
@@ -67,22 +69,43 @@ train_dfs = np.hstack((numeric_dfs.as_matrix(), vec_cat_dfs))
 queries_dfs = np.hstack((numeric_queries_dfs.as_matrix(), vec_cat_queries_dfs))
 
 
-# Test decision tree
+# Test Decision Tree
 # train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
 # testDecisionTreeClassifier = DecisionTreeClassifier(criterion='entropy')
 # testDecisionTreeClassifier.fit(train_values, train_target)
 # predictions = testDecisionTreeClassifier.predict(test_values)
 # print("Accuracy= " + str(accuracy_score(test_target, predictions, normalize=True)))
 
+# Test KNN
+# train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
+# knn = KNeighborsClassifier(n_neighbors=11)
+# knn.fit(train_values, train_target)
+# predictions = knn.predict(test_values)
+# print("Accuracy= " + str(accuracy_score(test_target, predictions, normalize=True)))
 
-# Classify queries
+# Test Gaussian Naive Bayes
+# train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
+# gnb = GaussianNB()
+# gnb.fit(train_values, train_target)
+# predictions = gnb.predict(test_values)
+# print("Accuracy= " + str(accuracy_score(test_target, predictions, normalize=True)))
+
+# Classify queries using decision trees
 decisionTreeClassfier = DecisionTreeClassifier(criterion='entropy')
 decisionTreeClassfier.fit(train_dfs, targetLabels)
 predictions = decisionTreeClassfier.predict(queries_dfs)
 
+# Classify queries using knn
+# knn = KNeighborsClassifier(n_neighbors=11)
+# knn.fit(train_dfs, targetLabels)
+# predictions = knn.predict(queries_dfs)
+
+# CLassify queries using naive bayes
+# gnb = GaussianNB()
+# gnb.fit(train_dfs, targetLabels)
+# predictions = gnb.predict(queries_dfs)
 
 # Write predictions to file
 predictions = '"' + predictions + '"'
 predictions_df = pd.DataFrame(data=predictions, index=queries['id'].as_matrix())
-
 predictions_df.to_csv('predictions.txt', sep=',', header=None, quoting=csv.QUOTE_NONE)
