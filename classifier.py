@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
-
+import csv
 
 # Set headings
 columnHeadings=['id', 'age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 'loan',
@@ -82,8 +82,7 @@ predictions = decisionTreeClassfier.predict(queries_dfs)
 
 
 # Write predictions to file
-predictions_dict = {'id': queries['id'].as_matrix(), 'prediction': predictions}
-predictions_df = pd.DataFrame(data=predictions_dict)
+predictions = '"' + predictions + '"'
+predictions_df = pd.DataFrame(data=predictions, index=queries['id'].as_matrix())
 
-
-predictions_df.to_csv('predictions.txt', sep=',', header=None, index=None, quoting=True)
+predictions_df.to_csv('predictions.txt', sep=',', header=None, quoting=csv.QUOTE_NONE)
