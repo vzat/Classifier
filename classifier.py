@@ -8,6 +8,8 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 import csv
 
+pd.options.mode.chained_assignment = None
+
 # Set headings
 columnHeadings=['id', 'age', 'job', 'marital', 'education', 'default', 'balance', 'housing', 'loan',
                 'contact', 'day', 'month', 'duration',
@@ -25,15 +27,22 @@ queries = pd.read_csv('queries.txt', header=None, names=columnHeadings, index_co
 targetLabels = trainingset['y']
 
 # Extract numeric features
-numeric_features = ['age', 'balance', 'day', 'duration', 'campaign', 'pdays', 'previous']
+# Duration was removed as it had a cardinality of 1
+numeric_features = ['age', 'balance', 'day', 'campaign', 'pdays', 'previous']
 numeric_dfs = trainingset[numeric_features]
 numeric_queries_dfs = queries[numeric_features]
+
+
+# Clamp the outlier on the balance
+maxBalance = int(np.mean(numeric_dfs['balance']) + 2 * np.std(numeric_dfs['balance']))
+numeric_dfs.loc[numeric_dfs['balance'] > maxBalance, 'balance'] = maxBalance
+
 
 # Extract categorical features
 # ID is removed as it is a unique value which will not help the classification
 # The target feature is removed as well
-cat_dfs = trainingset.drop(numeric_features + ['id'] + ['y'], axis=1)
-cat_queries_dfs = queries.drop(numeric_features + ['id'] + ['y'], axis=1)
+cat_dfs = trainingset.drop(numeric_features + ['id'] + ['y'] + ['duration'], axis=1)
+cat_queries_dfs = queries.drop(numeric_features + ['id'] + ['y'] + ['duration'], axis=1)
 
 
 # Fill missing values with unknown
@@ -70,40 +79,42 @@ queries_dfs = np.hstack((numeric_queries_dfs.as_matrix(), vec_cat_queries_dfs))
 
 
 # Test Decision Tree
-# train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
-# testDecisionTreeClassifier = DecisionTreeClassifier(criterion='entropy')
-# testDecisionTreeClassifier.fit(train_values, train_target)
-# predictions = testDecisionTreeClassifier.predict(test_values)
-# print("Accuracy= " + str(accuracy_score(test_target, predictions, normalize=True)))
+train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
+testDecisionTreeClassifier = DecisionTreeClassifier(criterion='entropy')
+testDecisionTreeClassifier.fit(train_values, train_target)
+predictions = testDecisionTreeClassifier.predict(test_values)
+print("Decision Tree Accuracy = " + str(accuracy_score(test_target, predictions, normalize=True)))
 
 # Test KNN
-# train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
-# knn = KNeighborsClassifier(n_neighbors=11)
-# knn.fit(train_values, train_target)
-# predictions = knn.predict(test_values)
-# print("Accuracy= " + str(accuracy_score(test_target, predictions, normalize=True)))
+train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
+knn = KNeighborsClassifier(n_neighbors=11)
+knn.fit(train_values, train_target)
+predictions = knn.predict(test_values)
+print("KNN Accuracy = " + str(accuracy_score(test_target, predictions, normalize=True)))
 
 # Test Gaussian Naive Bayes
-# train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
-# gnb = GaussianNB()
-# gnb.fit(train_values, train_target)
-# predictions = gnb.predict(test_values)
-# print("Accuracy= " + str(accuracy_score(test_target, predictions, normalize=True)))
+train_values, test_values, train_target, test_target = train_test_split(train_dfs, targetLabels, test_size=0.4)
+gnb = GaussianNB()
+gnb.fit(train_values, train_target)
+predictions = gnb.predict(test_values)
+print("Naive Bayes Accuracy = " + str(accuracy_score(test_target, predictions, normalize=True)))
+
 
 # Classify queries using decision trees
-decisionTreeClassfier = DecisionTreeClassifier(criterion='entropy')
-decisionTreeClassfier.fit(train_dfs, targetLabels)
-predictions = decisionTreeClassfier.predict(queries_dfs)
+decisionTreeClassifier = DecisionTreeClassifier(criterion='entropy')
+decisionTreeClassifier.fit(train_dfs, targetLabels)
+predictions = decisionTreeClassifier.predict(queries_dfs)
 
 # Classify queries using knn
 # knn = KNeighborsClassifier(n_neighbors=11)
 # knn.fit(train_dfs, targetLabels)
 # predictions = knn.predict(queries_dfs)
 
-# CLassify queries using naive bayes
+# Classify queries using naive bayes
 # gnb = GaussianNB()
 # gnb.fit(train_dfs, targetLabels)
 # predictions = gnb.predict(queries_dfs)
+
 
 # Write predictions to file
 predictions = '"' + predictions + '"'
